@@ -3,12 +3,14 @@
 # Author: Maxime BOCHON
 # Created: 2019-10-31
 #
-# Description(fr):
-#  Actuellement, `protractor` installe une version 2.x du "webdriver" de Chromium via le `webdriver-manager`.
-#  Hors cette version du "webdriver" n'est pas compatible avec les versions de Chromium supérieures à 73.
-#  Pourtant des "webdriver" compatibles existent pour chaque version de Chromium.
-#  Ce script a pour but d'effectuer correctement la mise à jour du "webdriver" Chromium,
-#  là où `webdriver-manager` de `protractor` semble échouer.
+# Description:
+#   Protractor installs the latest version of Chromium Web Driver from the internet via
+#   the `webdriver-manager` command. It may happen that the Web Driver version is ahead
+#   of the current local version of Chromium. In this case, this type of error occurs
+#   when running Protractor: `session not created: This version of ChromeDriver only
+#   supports Chrome version XY`. This script aims to work around the problem by
+#   replacing the installed version of the Web Driver with the one corresponding to the
+#   local version of Chromium.
 #
 # Keywords: Protractor WebDriver Selenium WebDriver-Manager Chromium Chrome ChromeDriver Outdated NPM Node
 #
@@ -36,12 +38,14 @@ done
 
 # Locate local web driver to replace
 
-DRIVER_PATH=$(find . -type f -regex '^.+/chromedriver_2\.[0-9][0-9]$')
+DRIVER_PATH=$(find . -type f -regex '^.+/chromedriver_[0-9][0-9\.]+[0-9]$')
 
 if [[ $? -ne 0 ]] || [[ -z "${DRIVER_PATH}" ]]; then
   echo >&2 "Cannot find current web driver to replace."
   exit 2
 fi
+
+echo "Local web driver to replace: ${DRIVER_PATH}" && echo
 
 
 # Download Chromium web driver list from Google
@@ -63,6 +67,8 @@ if [[ $? -ne 0 ]] || [[ -z "${VERSION}" ]]; then
   exit 4
 fi
 
+echo "Local Chromium version: ${VERSION}" && echo
+
 
 # Read web driver resource identifier from web driver list
 
@@ -73,6 +79,8 @@ if [[ $? -ne 0 ]] || [[ -z "${DRIVER_RESOURCE}" ]]; then
   exit 5
 fi
 
+echo "Web driver resource identifier: ${DRIVER_RESOURCE}" && echo
+
 
 # Download web driver archive for current Chromium version
 
@@ -82,6 +90,8 @@ if [[ $? -ne 0 ]]; then
   echo >&2 "Cannot download Chrome driver for current Chromium version."
   exit 6
 fi
+
+echo "Web driver archive was successfully downloaded." && echo
 
 
 # Extract web driver file from archive
@@ -94,6 +104,8 @@ if [[ $? -ne 0 ]]; then
   exit 7
 fi
 
+echo "Web driver file was successfully extracted from archive." && echo
+
 
 # Install new web driver (sneakily replace current one)
 
@@ -105,8 +117,9 @@ if [[ $? -ne 0 ]]; then
   exit 8
 fi
 
+echo "New web driver was successfully installed." && echo
+
 
 # Clean up
 
 rm -f ${TMP}/${DRIVER_ZIP}
-
